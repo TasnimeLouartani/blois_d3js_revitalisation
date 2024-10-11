@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réseau de Grappes D3.js Interactif</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        .node {
+            cursor: pointer;
+            stroke: #000;
+            stroke-width: 1.5px;
+        }
+        
+        text {
+            font: 12px sans-serif;
+            pointer-events: none;
+        }
+        
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 2px;
+        }
+    </style>
+</head>
+<body>
+    <svg width="1000" height="800"></svg>
+    <script>
+        const data = {
+            nodes: [
+                { id: "actions de revitalisation directe", group: 1 , chef: 1},
+                { id: "aides à la rénovation énergétique", group: 1 , chef: 2},
+                { id: "création de passages paysagers", group: 1 , chef: 2},
+                { id: "implantation de nouveaux commerces", group: 1 , chef: 2},
+                { id: "programmes urbains durables", group: 1 , chef: 2},
+                { id: "études et nouvelles activités", group: 2 , chef: 1},
+                { id: "études architecturales", group: 2 , chef: 2},
+                { id: "cartographies sensibles", group: 2 , chef: 2},
+                { id: "communication et régulation", group: 3 , chef: 1},
+                { id: "communication avec les propriétaires", group: 3 , chef: 2},
+                { id: "occupation temporaire des espaces", group: 3 , chef: 2},
+                { id: "régulation des pratiques", group: 4 , chef: 1},
+                { id: "encadrement des pratiques des foncières", group: 4 , chef: 2},
+                { id: "préemption de certains immeubles", group: 4 , chef: 2},
+                { id: "modifications réglementaires", group: 5 , chef: 1},
+                { id: "changement de PLU", group: 5 , chef: 2},
+                { id: "lois sur les rez-de-chaussée", group: 5 , chef: 2},
+                { id: "effets positifs", group: 6 , chef: 1},
+                { id: "meilleur état des bâtiments", group: 6 , chef: 2},
+                { id: "nouveaux habitants", group: 6 , chef: 2},
+                { id: "nouveaux styles de vie", group: 6 , chef: 2},
+                { id: "amélioration des façades", group: 6 , chef: 2},
+                { id: "ouverture des îlots vers la ville", group: 6 , chef: 2},
+                { id: "viabilité des commerces", group: 6 , chef: 2},
+                { id: "boucles de régulation", group: 7 , chef: 1},
+                { id: "stabilisation des prix", group: 7 , chef: 2},
+                { id: "conservation du patrimoine", group: 7 , chef: 2},
+                { id: "redynamisation économique", group: 7 , chef: 2}
+            ],
+
+            links: [
+                { source: "actions de revitalisation directe", target: "aides à la rénovation énergétique" },
+                { source: "actions de revitalisation directe", target: "création de passages paysagers" },
+                { source: "actions de revitalisation directe", target: "implantation de nouveaux commerces" },
+                { source: "actions de revitalisation directe", target: "programmes urbains durables" },
+                { source: "études et nouvelles activités", target: "études architecturales" },
+                { source: "études et nouvelles activités", target: "cartographies sensibles" },
+                { source: "communication et régulation", target: "communication avec les propriétaires" },
+                { source: "communication et régulation", target: "occupation temporaire des espaces" },
+                { source: "régulation des pratiques", target: "encadrement des pratiques des foncières" },
+                { source: "régulation des pratiques", target: "préemption de certains immeubles" },
+                { source: "modifications réglementaires", target: "changement de PLU" },
+                { source: "modifications réglementaires", target: "lois sur les rez-de-chaussée" },
+                { source: "effets positifs", target: "meilleur état des bâtiments" },
+                { source: "effets positifs", target: "nouveaux habitants" },
+                { source: "effets positifs", target: "nouveaux styles de vie" },
+                { source: "effets positifs", target: "amélioration des façades" },
+                { source: "effets positifs", target: "ouverture des îlots vers la ville" },
+                { source: "effets positifs", target: "viabilité des commerces" },
+                { source: "boucles de régulation", target: "stabilisation des prix" },
+                { source: "boucles de régulation", target: "conservation du patrimoine" },
+                { source: "boucles de régulation", target: "redynamisation économique" }
+            ]
+        };
+
+        const colors = {
+            1: "#B3E6B3", // Vert pastel
+            2: "#B3C6FF", // Bleu pastel
+            3: "#FFD9B3", // Orange pastel
+            4: "#FFB3B3", // Rouge pastel
+            5: "#D9B3FF", // Violet pastel
+            6: "#CCE6FF", // Bleu clair pastel
+            7: "#D9FFCC" // Vert clair pastel
+        };
+		
+		const rayon = {
+			1: "30",
+			2: "15",
+		};
+
+        const svg = d3.select("svg"),
+            width = +svg.attr("width"),
+            height = +svg.attr("height");
+
+        const simulation = d3.forceSimulation(data.nodes)
+            .force("link", d3.forceLink(data.links).id(d => d.id).distance(50))
+            .force("charge", d3.forceManyBody().strength(-30))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collision", d3.forceCollide().radius(30));
+
+        const link = svg.append("g")
+            .attr("class", "links")
+            .selectAll("line")
+            .data(data.links)
+            .enter().append("line")
+            .attr("class", "link")
+            .attr("stroke-width", 2);
+
+        const node = svg.append("g")
+            .attr("class", "nodes")
+            .selectAll("circle")
+            .data(data.nodes)
+            .enter().append("circle")
+            .attr("class", "node")
+            .attr("r", d => rayon[d.chef])
+            .attr("fill", d => colors[d.group])
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended))
+            .on("click", clicked);
+			
+        const text = svg.append("g")
+            .attr("class", "texts")
+            .selectAll("text")
+            .data(data.nodes)
+            .enter().append("text")
+            .attr("dy", 3)
+            .attr("x", 20)
+            .style("font-size", "12px")
+            .text(d => d.id);
+
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+			node
+				.attr("cx", d => d.x = Math.max(30, Math.min(1000 - 30, d.x)))
+				.attr("cy", d => d.y = Math.max(30, Math.min(800 - 30, d.y)));
+
+            text
+                .attr("x", d => d.x + 15)
+                .attr("y", d => d.y);
+			  
+
+        });
+
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            if (!d.fixed) {
+                d.fx = null;
+                d.fy = null;
+            }
+        }
+
+        function clicked(event, d) {
+            if (d.fixed) {
+                d.fx = null;
+                d.fy = null;
+                d.fixed = false;
+            } else {
+                d.fx = d.x;
+                d.fy = d.y;
+                d.fixed = true;
+            }
+        }
+    </script>
+</body>
+</html>
